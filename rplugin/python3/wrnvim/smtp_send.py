@@ -2,7 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
-def create_message(from_addr, to_addr, bcc_addrs='', subject, body):
+def create_message(from_addr, to_addr, subject, body, bcc_addrs=''):
     msg = MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = from_addr

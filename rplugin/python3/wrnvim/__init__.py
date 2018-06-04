@@ -2,7 +2,8 @@ import neovim
 import os
 import yaml
 import re
-import send
+from .smtp_send import create_message
+from .smtp_send import send
 
 @neovim.plugin
 class WrNvim(object):
@@ -37,13 +38,12 @@ class WrNvim(object):
         if self.vim.eval('exists("g:sendyml_path")'):
             settings = self.load_settings()
             title, body = self.load_wr()
-            msg = send.create_message(settings['server'], settings['password'], title, body)
-            send.send(settings['server'], settings['password'], msg)
+            msg = create_message(settings['server'], settings['password'], title, body)
+            send(settings['server'], settings['password'], msg)
             self.nvim.command('echo "SUCCESS!"')
-        else:
         else:
             self.nvim.command('echo "Not found g:sendyml_path"')
         
     @neovim.command('HelloNvim')
-    def hello:
+    def hello(self):
         self.nvim.command('echo "Hello Neovim"')
