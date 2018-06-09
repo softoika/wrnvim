@@ -24,7 +24,7 @@ class WrNvim(object):
         '''
         カレントバッファからメールのタイトルと本文を正規表現で取得する
         '''
-        buf = self.nvim.current.buffer[:]
+        buf = self.vim.current.buffer[:]
         text = '\n'.join(buf)
         pt = r'(?<title:\n).*'
         pb = r'(?<=body:\n).*'
@@ -40,10 +40,11 @@ class WrNvim(object):
             title, body = self.load_wr()
             msg = create_message(settings['server'], settings['password'], title, body)
             send(settings['server'], settings['password'], msg)
-            self.nvim.command('echo "SUCCESS!"')
+            self.vim.command('echo "SUCCESS!"')
         else:
-            self.nvim.command('echo "Not found g:sendyml_path"')
+            self.vim.command('echo "Not found g:sendyml_path"')
         
     @neovim.command('HelloNvim')
     def hello(self):
-        self.nvim.command('echo "Hello Neovim"')
+        self.vim.command('echo "Hello Neovim"')
+
