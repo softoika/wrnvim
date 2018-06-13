@@ -12,7 +12,7 @@ class WrNvim(object):
     def __init__(self, vim):
         self.vim = vim
 
-    def load_settings(self):
+    def _load_settings(self):
         '''
         g:sendyaml_pathに設定されたパスにあるsend.ymlから設定を読み込む
         '''
@@ -21,7 +21,7 @@ class WrNvim(object):
             settings = yaml.load(f)
             return settings
 
-    def load_wr(self):
+    def _load_wr(self):
         '''
         カレントバッファからメールのタイトルと本文を正規表現で取得する
         '''
@@ -33,12 +33,12 @@ class WrNvim(object):
         mb = re.search(pb, text, flags=(re.MULTILINE | re.DOTALL))
         if mt and mb:
             return (mt.group(0), mb.group(0))
-
+    
     @neovim.command('WrSend')
     def send(self):
         if self.vim.eval('exists("g:sendyml_path")'):
-            settings = self.load_settings()
-            title, body = self.load_wr()
+            settings = self._load_settings()
+            title, body = self._load_wr()
             if title and body:
                 msg = create_message(settings['from'], settings['to'], title, body)
                 send(settings['server'], settings['password'], msg)
@@ -46,3 +46,18 @@ class WrNvim(object):
         else:
             self.vim.command('echo "Not found g:sendyml_path"')
         
+    def _highlight(self):
+        self.vim.command('call matchadd("Comment", "--.*", 0)')
+        self.vim.command('call matchadd("Comment", "==.*", 0)')
+        self.vim.command('call matchadd("Constant", "\d", 0)')
+        self.vim.command('call matchadd("Function", "■.*", 0)')
+        self.vim.command('call matchadd("Statement", "^[0-9a-zA-Z\-_]+:", 0)')
+
+    @neovim.autocmd('BufNewFile', pattern='*.wr'):
+    def on_bufnewfile(self):
+        self._highlight()
+
+    @neovim.autocmd('BufRead', pattern='*.wr'):
+    def on_bufread(self):
+        self._highlight()
+
