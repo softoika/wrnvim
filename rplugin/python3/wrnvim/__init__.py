@@ -49,9 +49,9 @@ class WrNvim(object):
     def _highlight(self):
         self.vim.command('call matchadd("Comment", "--.*", 0)')
         self.vim.command('call matchadd("Comment", "==.*", 0)')
-        self.vim.command('call matchadd("Constant", "\d", 0)')
+        self.vim.command('call matchadd("Constant", "\d", 1)')
         self.vim.command('call matchadd("Function", "■.*", 0)')
-        self.vim.command('call matchadd("Statement", "^[0-9a-zA-Z\-_]+:", 0)')
+        self.vim.command('call matchadd("Statement", "^[a-zA-Z_]\+:", 0)')
 
     @neovim.autocmd('BufNewFile', pattern='*.wr')
     def on_bufnewfile(self):
