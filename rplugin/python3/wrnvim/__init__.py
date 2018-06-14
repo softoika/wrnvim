@@ -53,11 +53,11 @@ class WrNvim(object):
         self.vim.command('call matchadd("Function", "■.*", 0)')
         self.vim.command('call matchadd("Statement", "^[0-9a-zA-Z\-_]+:", 0)')
 
-    @neovim.autocmd('BufNewFile', pattern='*.wr'):
+    @neovim.autocmd('BufNewFile', pattern='*.wr')
     def on_bufnewfile(self):
         self._highlight()
 
-    @neovim.autocmd('BufRead', pattern='*.wr'):
+    @neovim.autocmd('BufRead', pattern='*.wr')
     def on_bufread(self):
         self._highlight()
 
