@@ -64,8 +64,8 @@ class WrNvim(object):
         text = self._current_buffer()
         ptd = r'(?<=WR_)\d+'
         pbd = r'\d{4}年\d\d月\d\d日'
-        new_td = _thisweek().strftime('%Y%m%d')
-        new_bd = _thisweek().strftime('%Y年%m月%d日')
+        new_td = self._thisweek().strftime('%Y%m%d')
+        new_bd = self._thisweek().strftime('%Y年%m月%d日')
         text = re.sub(ptd, new_td, text)
         text = re.sub(pbd, new_bd, text)
         self.vim.vars['text'] = text.split('\n')
