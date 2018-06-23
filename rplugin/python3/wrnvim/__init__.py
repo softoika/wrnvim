@@ -2,6 +2,7 @@ import neovim
 import os
 import yaml
 import re
+from datetime import date, datetime, timedelta
 from .smtp_send import create_message
 from .smtp_send import send
 
@@ -21,12 +22,15 @@ class WrNvim(object):
             settings = yaml.load(f)
             return settings
 
+    def _current_buffer(self):
+        buf = self.vim.current.buffer[:]
+        return '\n'.join(buf)
+
     def _load_wr(self):
         '''
         カレントバッファからメールのタイトルと本文を正規表現で取得する
         '''
-        buf = self.vim.current.buffer[:]
-        text = '\n'.join(buf)
+        text = self._current_buffer()
         pt = r'(?<=title:\n).*'
         pb = r'(?<=body:\n).*'
         mt = re.search(pt, text, flags=re.MULTILINE)
@@ -45,6 +49,28 @@ class WrNvim(object):
                 self.vim.command('echo "SUCCESS!"')
         else:
             self.vim.command('echo "Not found g:sendyml_path"')
+
+    def _thisweek(self, weekday='fri'):
+        weekdays = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 
+                    'sat': 5, 'sun': 6}
+        today = date.today()
+        if today.weekday() < weekdays[weekday]:
+            return today + timedelta(days=weekdays[weekday] - today.weekday())
+        else:
+            return today - timedelta(days=today.weekday() - weekdays[weekday])
+
+    @neovim.command('WrNew')
+    def new(self):
+        text = self._current_buffer()
+        ptd = r'(?<=WR_)\d+'
+        pbd = r'\d{4}年\d\d月\d\d日'
+        new_td = _thisweek().strftime('%Y%m%d')
+        new_bd = _thisweek().strftime('%Y年%m月%d日')
+        text = re.sub(ptd, new_td, text)
+        text = re.sub(pbd, new_bd, text)
+        self.vim.vars['text'] = text.split('\n')
+        self.vim.command(f'call writefile(g:text, "{new_td}.wr")')
+        self.vim.command(f'e {new_td}.wr')
         
     def _highlight(self):
         self.vim.command('call matchadd("Comment", "--.*", 0)')
