@@ -15,3 +15,16 @@ hook_post_update = '''
 call dein#remote_plugins()
 '''
 ```
+
+# [Debug on Python REPL](https://github.com/neovim/python-client#usage-through-the-python-repl)
+## Dependency
+- pipenv
+## Connect Python REPL with Nvim
+Start Nvim with a known address:
+```
+$ NVIM_LISTEN_ADDRESS=/tmp/nvim nvim
+```
+In another terminal, connect a python REPL by using nvimrepl.sh
+```
+./nvimrepl.sh
+```
