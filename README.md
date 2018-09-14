@@ -26,5 +26,5 @@ $ NVIM_LISTEN_ADDRESS=/tmp/nvim nvim
 ```
 In another terminal, connect a python REPL by using nvimrepl.sh
 ```
-./nvimrepl.sh
+$ ./nvimrepl.sh
 ```
