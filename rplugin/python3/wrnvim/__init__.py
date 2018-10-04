@@ -72,6 +72,35 @@ class WrNvim(object):
         self.vim.command(f'call writefile(g:text, "{new_td}.wr")')
         self.vim.command(f'e {new_td}.wr')
         
+    @neovim.command('WrClear')
+    def clear(self):
+        '''
+        労働時間以外の各項目の内容を削除する
+        '''
+        text = self._current_buffer()
+        p = r"(?<=[-=]{5}\n).*?(?=■|[-=]{5}|$)"
+        matches = re.finditer(p, text, flags=re.DOTALL)
+        # 最初の項目(労働時間)を無視する
+        matches.__next__()
+        for m in matches:
+            g = m.group(0) if m.group(0) else '\n'
+            text = text.replace(g, '\n')
+        self._replace_buffer(text)
+
+    def _replace_buffer(self, text):
+        self.vim.vars['lines'] = self._delete_redundant_line(text.split('\n'))
+        self.vim.command('0,$delete')
+        self.vim.command('call append(0, g:lines)')
+
+    def _delete_redundant_line(self, lines):
+        new_lines = [lines[0]]
+        prev = lines[0]
+        for line in lines[1:]:
+            if prev != '' or line != '':
+                new_lines.append(line)
+            prev = line
+        return new_lines
+
     def _highlight(self):
         self.vim.command('call matchadd("Comment", "--.*", 0)')
         self.vim.command('call matchadd("Comment", "==.*", 0)')
