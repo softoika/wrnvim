@@ -2,9 +2,10 @@ import neovim
 import os
 import yaml
 import re
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from .smtp_send import create_message
 from .smtp_send import send
+
 
 @neovim.plugin
 class WrNvim(object):
@@ -37,21 +38,22 @@ class WrNvim(object):
         mb = re.search(pb, text, flags=(re.MULTILINE | re.DOTALL))
         if mt and mb:
             return (mt.group(0), mb.group(0))
-    
+
     @neovim.command('WrSend')
     def send(self):
         if self.vim.eval('exists("g:sendyml_path")'):
             settings = self._load_settings()
             title, body = self._load_wr()
             if title and body:
-                msg = create_message(settings['from'], settings['to'], title, body)
+                msg = create_message(settings['from'],
+                                     settings['to'], title, body)
                 send(settings['server'], settings['password'], msg)
                 self.vim.command('echo "SUCCESS!"')
         else:
             self.vim.command('echo "Not found g:sendyml_path"')
 
     def _thisweek(self, weekday='fri'):
-        weekdays = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 
+        weekdays = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4,
                     'sat': 5, 'sun': 6}
         today = date.today()
         if today.weekday() < weekdays[weekday]:
@@ -71,7 +73,7 @@ class WrNvim(object):
         self.vim.vars['text'] = text.split('\n')
         self.vim.command(f'call writefile(g:text, "{new_td}.wr")')
         self.vim.command(f'e {new_td}.wr')
-        
+
     def _highlight(self):
         self.vim.command('call matchadd("Comment", "--.*", 0)')
         self.vim.command('call matchadd("Comment", "==.*", 0)')
@@ -86,4 +88,3 @@ class WrNvim(object):
     @neovim.autocmd('BufRead', pattern='*.wr')
     def on_bufread(self):
         self._highlight()
-

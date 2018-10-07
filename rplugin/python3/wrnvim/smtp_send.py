@@ -2,6 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
+
 def create_message(from_addr, to_addr, subject, body, bcc_addrs=''):
     msg = MIMEText(body)
     msg['Subject'] = subject
@@ -10,6 +11,7 @@ def create_message(from_addr, to_addr, subject, body, bcc_addrs=''):
     msg['Bcc'] = bcc_addrs
     msg['Date'] = formatdate()
     return msg
+
 
 def send(server_address, password, msg):
     with smtplib.SMTP(server_address, 587) as smtp:
