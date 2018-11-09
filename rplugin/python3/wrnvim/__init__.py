@@ -2,26 +2,27 @@ import neovim
 import os
 import yaml
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from . import config
 from .smtp_send import create_message
 from .smtp_send import send
 
 
 @neovim.plugin
 class WrNvim(object):
-    SEND_YAML = 'send.yml'
 
     def __init__(self, vim):
         self.vim = vim
+        if self._exists_vim_variable('g:clear_text_on_wrnew'):
+            config.clear_text_on_wrnew = vim.eval('g:clear_text_on_wrnew')
 
-    def _load_settings(self):
+    def _load_send_yaml(self):
         '''
         g:sendyaml_pathに設定されたパスにあるsend.ymlから設定を読み込む
         '''
         path = self.vim.eval('g:sendyml_path')
-        with open(os.path.join(path, WrNvim.SEND_YAML)) as f:
-            settings = yaml.load(f)
-            return settings
+        with open(os.path.join(path, config.send_yaml)) as f:
+            return yaml.load(f)
 
     def _current_buffer(self):
         buf = self.vim.current.buffer[:]
@@ -41,13 +42,12 @@ class WrNvim(object):
 
     @neovim.command('WrSend')
     def send(self):
-        if self.vim.eval('exists("g:sendyml_path")'):
-            settings = self._load_settings()
+        if self._exists_vim_variable('g:sendyml_path'):
+            param = self._load_send_yaml()
             title, body = self._load_wr()
             if title and body:
-                msg = create_message(settings['from'],
-                                     settings['to'], title, body)
-                send(settings['server'], settings['password'], msg)
+                msg = create_message(param['from'], param['to'], title, body)
+                send(param['server'], param['password'], msg)
                 self.vim.command('echo "SUCCESS!"')
         else:
             self.vim.command('echo "Not found g:sendyml_path"')
@@ -73,6 +73,37 @@ class WrNvim(object):
         self.vim.vars['text'] = text.split('\n')
         self.vim.command(f'call writefile(g:text, "{new_td}.wr")')
         self.vim.command(f'e {new_td}.wr')
+        if config.clear_text_on_wrnew:
+            self.clear()
+        
+    @neovim.command('WrClear')
+    def clear(self):
+        '''
+        労働時間以外の各項目の内容を削除する
+        '''
+        text = self._current_buffer()
+        p = r"(?<=[-=]{5}\n).*?(?=■|[-=]{5}|$)"
+        matches = re.finditer(p, text, flags=re.DOTALL)
+        # 最初の項目(労働時間)を無視する
+        matches.__next__()
+        for m in matches:
+            g = m.group(0) if m.group(0) else '\n'
+            text = text.replace(g, '\n')
+        self._replace_buffer(text)
+
+    def _replace_buffer(self, text):
+        self.vim.vars['lines'] = self._delete_redundant_line(text.split('\n'))
+        self.vim.command('0,$delete')
+        self.vim.command('call append(0, g:lines)')
+
+    def _delete_redundant_line(self, lines):
+        new_lines = [lines[0]]
+        prev = lines[0]
+        for line in lines[1:]:
+            if prev != '' or line != '':
+                new_lines.append(line)
+            prev = line
+        return new_lines
 
     def _highlight(self):
         self.vim.command('call matchadd("Comment", "--.*", 0)')
@@ -88,3 +119,6 @@ class WrNvim(object):
     @neovim.autocmd('BufRead', pattern='*.wr')
     def on_bufread(self):
         self._highlight()
+
+    def _exists_vim_variable(self, name):
+        return self.vim.eval(f'exists("{name}")')
