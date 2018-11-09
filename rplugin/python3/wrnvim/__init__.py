@@ -13,10 +13,10 @@ class WrNvim(object):
 
     def __init__(self, vim):
         self.vim = vim
-        if self._exists_vim_variable('g:clear_text_on_wrnew'):
+        if self.__exists_vim_variable('g:clear_text_on_wrnew'):
             config.clear_text_on_wrnew = vim.eval('g:clear_text_on_wrnew')
 
-    def _load_send_yaml(self):
+    def __load_send_yaml(self):
         '''
         g:sendyaml_pathに設定されたパスにあるsend.ymlから設定を読み込む
         '''
@@ -24,15 +24,15 @@ class WrNvim(object):
         with open(os.path.join(path, config.send_yaml)) as f:
             return yaml.load(f)
 
-    def _current_buffer(self):
+    def __current_buffer(self):
         buf = self.vim.current.buffer[:]
         return '\n'.join(buf)
 
-    def _load_wr(self):
+    def __load_wr(self):
         '''
         カレントバッファからメールのタイトルと本文を正規表現で取得する
         '''
-        text = self._current_buffer()
+        text = self.__current_buffer()
         pt = r'(?<=title:\n).*'
         pb = r'(?<=body:\n).*'
         mt = re.search(pt, text, flags=re.MULTILINE)
@@ -42,9 +42,9 @@ class WrNvim(object):
 
     @neovim.command('WrSend')
     def send(self):
-        if self._exists_vim_variable('g:sendyml_path'):
-            param = self._load_send_yaml()
-            title, body = self._load_wr()
+        if self.__exists_vim_variable('g:sendyml_path'):
+            param = self.__load_send_yaml()
+            title, body = self.__load_wr()
             if title and body:
                 msg = create_message(param['from'], param['to'], title, body)
                 send(param['server'], param['password'], msg)
@@ -52,7 +52,7 @@ class WrNvim(object):
         else:
             self.vim.command('echo "Not found g:sendyml_path"')
 
-    def _thisweek(self, weekday='fri'):
+    def __thisweek(self, weekday='fri'):
         weekdays = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4,
                     'sat': 5, 'sun': 6}
         today = date.today()
@@ -66,8 +66,8 @@ class WrNvim(object):
         text = self._current_buffer()
         ptd = r'(?<=WR_)\d+'
         pbd = r'\d{4}年\d\d月\d\d日'
-        new_td = self._thisweek().strftime('%Y%m%d')
-        new_bd = self._thisweek().strftime('%Y年%m月%d日')
+        new_td = self.__thisweek().strftime('%Y%m%d')
+        new_bd = self.__thisweek().strftime('%Y年%m月%d日')
         text = re.sub(ptd, new_td, text)
         text = re.sub(pbd, new_bd, text)
         self.vim.vars['text'] = text.split('\n')
@@ -89,14 +89,14 @@ class WrNvim(object):
         for m in matches:
             g = m.group(0) if m.group(0) else '\n'
             text = text.replace(g, '\n')
-        self._replace_buffer(text)
+        self.__replace_buffer(text)
 
-    def _replace_buffer(self, text):
-        self.vim.vars['lines'] = self._delete_redundant_line(text.split('\n'))
+    def __replace_buffer(self, text):
+        self.vim.vars['lines'] = self.__delete_redundant_line(text.split('\n'))
         self.vim.command('0,$delete')
         self.vim.command('call append(0, g:lines)')
 
-    def _delete_redundant_line(self, lines):
+    def __delete_redundant_line(self, lines):
         new_lines = [lines[0]]
         prev = lines[0]
         for line in lines[1:]:
@@ -105,7 +105,7 @@ class WrNvim(object):
             prev = line
         return new_lines
 
-    def _highlight(self):
+    def __highlight(self):
         self.vim.command('call matchadd("Comment", "--.*", 0)')
         self.vim.command('call matchadd("Comment", "==.*", 0)')
         self.vim.command('call matchadd("Constant", "[0-9]", 1)')
@@ -114,11 +114,11 @@ class WrNvim(object):
 
     @neovim.autocmd('BufNewFile', pattern='*.wr')
     def on_bufnewfile(self):
-        self._highlight()
+        self.__highlight()
 
     @neovim.autocmd('BufRead', pattern='*.wr')
     def on_bufread(self):
-        self._highlight()
+        self.__highlight()
 
-    def _exists_vim_variable(self, name):
+    def __exists_vim_variable(self, name):
         return self.vim.eval(f'exists("{name}")')
