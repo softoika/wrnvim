@@ -10,10 +10,6 @@ dein.toml example
 repo = 'softoika/wrnvim'
 hook_add = '''
 let g:sendyml_path="/path/to/dir"
-'''
-hook_post_update = '''
-call dein#remote_plugins()
-'''
 ```
 
 # [Debug on Python REPL](https://github.com/neovim/python-client#usage-through-the-python-repl)
