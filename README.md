@@ -10,6 +10,7 @@ dein.toml example
 repo = 'softoika/wrnvim'
 hook_add = '''
 let g:sendyml_path="/path/to/dir"
+'''
 ```
 
 # [Debug on Python REPL](https://github.com/neovim/python-client#usage-through-the-python-repl)
